@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System;
-using MLAPI.Data;
+﻿using MLAPI.Data;
 using MLAPI.Internal;
 using MLAPI.Logging;
 using MLAPI.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -24,9 +25,9 @@ namespace MLAPI.Components
         internal static uint currentSceneIndex = 0;
         internal static Guid currentSceneSwitchProgressGuid = new Guid();
 
-        internal static void SetCurrentSceneIndex ()
+        internal static void SetCurrentSceneIndex()
         {
-            if(!sceneNameToIndex.ContainsKey(SceneManager.GetActiveScene().name))
+            if (!sceneNameToIndex.ContainsKey(SceneManager.GetActiveScene().name))
             {
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Scene switching is enabled but the current scene (" + SceneManager.GetActiveScene().name + ") is not regisered as a network scene.");
                 return;
@@ -43,7 +44,7 @@ namespace MLAPI.Components
         /// <param name="sceneName">The name of the scene to switch to</param>
         public static SceneSwitchProgress SwitchScene(string sceneName)
         {
-            if(!NetworkingManager.Singleton.NetworkConfig.EnableSceneSwitching)
+            if (!NetworkingManager.Singleton.NetworkConfig.EnableSceneSwitching)
             {
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Scene switching is not enabled");
                 return null;
@@ -53,7 +54,7 @@ namespace MLAPI.Components
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Scene switch already in progress");
                 return null;
             }
-            else if(!registeredSceneNames.Contains(sceneName))
+            else if (!registeredSceneNames.Contains(sceneName))
             {
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("The scene " + sceneName + " is not registered as a switchable scene.");
                 return null;
@@ -64,6 +65,7 @@ namespace MLAPI.Components
             lastScene = SceneManager.GetActiveScene();
 
             SceneSwitchProgress switchSceneProgress = new SceneSwitchProgress();
+            switchSceneProgress.OnComplete += SwitchSceneProgressOnOnComplete;
             sceneSwitchProgresses.Add(switchSceneProgress.guid, switchSceneProgress);
             currentSceneSwitchProgressGuid = switchSceneProgress.guid;
 
@@ -86,6 +88,18 @@ namespace MLAPI.Components
             return switchSceneProgress;
         }
 
+        private static void SwitchSceneProgressOnOnComplete(bool timedout)
+        {
+            if (NetworkingManager.Singleton.IsServer || NetworkingManager.Singleton.IsHost)
+            {
+                InternalMessageHandler.Send(MLAPIConstants.MLAPI_FULL_SWITCH_COMPLETE, "MLAPI_INTERNAL", null, SecuritySendFlags.None, null);
+                foreach (var networkedObject in SpawnManager.SpawnedObjectsList.Where(x => x?.IsSpawned == true))
+                {
+                    networkedObject.InvokeBehaviourNetworkReady();
+                }
+            }
+        }
+
         /// <summary>
         /// Called on client
         /// </summary>
@@ -93,6 +107,8 @@ namespace MLAPI.Components
         /// <param name="switchSceneGuid"></param>
         internal static void OnSceneSwitch(uint sceneIndex, Guid switchSceneGuid)
         {
+            uint clientId = NetworkingManager.Singleton.LocalClientId;
+
             if (!NetworkingManager.Singleton.NetworkConfig.EnableSceneSwitching)
             {
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Scene switching is not enabled but was requested by the server");
@@ -103,8 +119,16 @@ namespace MLAPI.Components
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Server requested a scene switch to a non registered scene");
                 return;
             }
-            else if(SceneManager.GetActiveScene().name == sceneIndexToString[sceneIndex])
+            else if (SceneManager.GetActiveScene().name == sceneIndexToString[sceneIndex])
             {
+                if (clientId <= 0)
+                {
+                    if (NetworkingManager.Singleton.ConnectedClients.ContainsKey(clientId))
+                    {
+                        NetworkingManager.Singleton.ConnectedClients[clientId].PlayerObject?.InvokeBehaviourNetworkReady();
+                    }
+                }
+
                 return; //This scene is already loaded. This usually happends at first load
             }
 
@@ -116,19 +140,22 @@ namespace MLAPI.Components
             string sceneName = sceneIndexToString[sceneIndex];
             AsyncOperation sceneLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
             nextScene = SceneManager.GetSceneByName(sceneName);
-            sceneLoad.completed += (AsyncOperation operation) => { OnSceneLoaded(operation, switchSceneGuid); };
+            sceneLoad.completed += (AsyncOperation operation) =>
+            {
+                OnSceneLoaded(operation, switchSceneGuid);
+            };
         }
 
         private static void OnSceneLoaded(AsyncOperation operation, Guid switchSceneGuid)
         {
             CurrentActiveSceneIndex = sceneNameToIndex[nextScene.name];
             SceneManager.SetActiveScene(nextScene);
-            
+
             List<NetworkedObject> objectsToKeep = SpawnManager.SpawnedObjectsList;
             for (int i = 0; i < objectsToKeep.Count; i++)
             {
                 //In case an object has been set as a child of another object it has to be unchilded in order to be moved from one scene to another.
-                if(objectsToKeep[i].gameObject.transform.parent != null)
+                if (objectsToKeep[i].gameObject.transform.parent != null)
                 {
                     objectsToKeep[i].gameObject.transform.parent = null;
                 }
@@ -191,27 +218,40 @@ namespace MLAPI.Components
             }
 
             isSwitching = false;
+            if (NetworkingManager.Singleton.IsServer)
+            {
+                foreach (var keyValuePair in SpawnManager.SpawnedObjects.Where(x => x.Key == NetworkingManager.Singleton.ServerClientId || x.Key == NetworkingManager.Singleton.LocalClientId))
+                {
+                    keyValuePair.Value.InvokeBehaviourNetworkReady();
+                }
+            }
+            else
+            {
+                foreach (var keyValuePair in SpawnManager.SpawnedObjects.Where(x => x.Value.OwnerClientId == NetworkingManager.Singleton.LocalClientId))
+                {
+                    keyValuePair.Value.InvokeBehaviourNetworkReady();
+                }
+            }
         }
-
 
         /// <summary>
         /// Called on server
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="switchSceneGuid"></param>
-        internal static void OnClientSwitchSceneCompleted(uint clientId, Guid switchSceneGuid) 
+        internal static void OnClientSwitchSceneCompleted(uint clientId, Guid switchSceneGuid)
         {
             if (!NetworkingManager.Singleton.NetworkConfig.EnableSceneSwitching)
             {
                 if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Scene switching is not enabled but was confirmed done by a client");
                 return;
             }
-            if(switchSceneGuid == Guid.Empty) 
+            if (switchSceneGuid == Guid.Empty)
             {
                 //If Guid is empty it means the client has loaded the start scene of the server and the server would never have a switchSceneProgresses created for the start scene.
                 return;
             }
-            if (!sceneSwitchProgresses.ContainsKey(switchSceneGuid)) 
+            if (!sceneSwitchProgresses.ContainsKey(switchSceneGuid))
             {
                 return;
             }
@@ -219,8 +259,7 @@ namespace MLAPI.Components
             sceneSwitchProgresses[switchSceneGuid].AddClientAsDone(clientId);
         }
 
-
-        internal static void RemoveClientFromSceneSwitchProgresses(uint clientId) 
+        internal static void RemoveClientFromSceneSwitchProgresses(uint clientId)
         {
             foreach (SceneSwitchProgress switchSceneProgress in sceneSwitchProgresses.Values)
                 switchSceneProgress.RemoveClientAsDone(clientId);

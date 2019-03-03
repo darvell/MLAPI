@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
-using System.Linq;
-using MLAPI.Configuration;
+﻿using MLAPI.Configuration;
 using MLAPI.Serialization;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEngine;
 
 namespace MLAPI.Prototyping
 {
@@ -26,37 +26,45 @@ namespace MLAPI.Prototyping
         /// </summary>
         [Range(0, 120)]
         public float FixedSendsPerSecond = 20f;
+
         /// <summary>
         /// Is the sends per second assumed to be the same across all instances
         /// </summary>
         [Tooltip("This assumes that the SendsPerSecond is synced across clients")]
         public bool AssumeSyncedSends = true;
+
         /// <summary>
         /// Enable interpolation
         /// </summary>
         [Tooltip("This requires AssumeSyncedSends to be true")]
         public bool InterpolatePosition = true;
+
         /// <summary>
         /// The distance before snaping to the position
         /// </summary>
         [Tooltip("The transform will snap if the distance is greater than this distance")]
         public float SnapDistance = 10f;
+
         /// <summary>
         /// Should the server interpolate
         /// </summary>
         public bool InterpolateServer = true;
+
         /// <summary>
         /// The min meters to move before a send is sent
         /// </summary>
         public float MinMeters = 0.15f;
+
         /// <summary>
         /// The min degrees to rotate before a send it sent
         /// </summary>
         public float MinDegrees = 1.5f;
+
         /// <summary>
         /// Enables extrapolation
         /// </summary>
         public bool ExtrapolatePosition = false;
+
         /// <summary>
         /// The maximum amount of expected send rates to extrapolate over when awaiting new packets.
         /// A higher value will result in continued extrapolation after an object has stopped moving
@@ -74,19 +82,22 @@ namespace MLAPI.Prototyping
         private Quaternion lastSentRot;
 
         private float lastRecieveTime;
-        
+
         /// <summary>
         /// Enables range based send rate
         /// </summary>
         public bool EnableRange;
+
         /// <summary>
         /// Checks for missed sends without provocation. Provocation being a client inside it's normal SendRate
         /// </summary>
         public bool EnableNonProvokedResendChecks;
+
         /// <summary>
         /// The curve to use to calculate the send rate
         /// </summary>
         public AnimationCurve DistanceSendrate = AnimationCurve.Constant(0, 500, 20);
+
         private readonly Dictionary<uint, ClientSendInfo> clientSendInfo = new Dictionary<uint, ClientSendInfo>();
 
         /// <summary>
@@ -96,6 +107,7 @@ namespace MLAPI.Prototyping
         /// <param name="newPos">The new requested position</param>
         /// <returns>Returns wheter or not the move is valid</returns>
         public delegate bool MoveValidationDelegate(Vector3 oldPos, Vector3 newPos);
+
         /// <summary>
         /// If set, moves will only be accepted if the custom delegate returns true
         /// </summary>
@@ -114,12 +126,12 @@ namespace MLAPI.Prototyping
             if (EnableNonProvokedResendChecks && !EnableRange)
                 EnableNonProvokedResendChecks = false;
         }
-        
+
         private float GetTimeForLerp(Vector3 pos1, Vector3 pos2)
         {
             return 1f / DistanceSendrate.Evaluate(Vector3.Distance(pos1, pos2));
         }
-        
+
         /// <summary>
         /// Registers message handlers
         /// </summary>
@@ -162,7 +174,6 @@ namespace MLAPI.Prototyping
                                 InvokeServerRpc(SubmitTransform, stream);
                         }
                     }
-
                 }
             }
             else
@@ -177,7 +188,7 @@ namespace MLAPI.Prototyping
                     }
 
                     float sendDelay = (IsServer || !EnableRange || !AssumeSyncedSends) ? (1f / FixedSendsPerSecond) : GetTimeForLerp(transform.position, NetworkingManager.Singleton.ConnectedClients[NetworkingManager.Singleton.LocalClientId].PlayerObject.transform.position);
-                    lerpT += Time.time / sendDelay;
+                    lerpT += Time.unscaledDeltaTime / sendDelay;
 
                     if (ExtrapolatePosition && Time.time - lastRecieveTime < sendDelay * MaxSendsToExtrapolate)
                         transform.position = Vector3.LerpUnclamped(lerpStartPos, lerpEndPos, lerpT);
@@ -200,7 +211,6 @@ namespace MLAPI.Prototyping
             if (!enabled) return;
             using (PooledBitReader reader = PooledBitReader.Get(stream))
             {
-
                 float xPos = reader.ReadSinglePacked();
                 float yPos = reader.ReadSinglePacked();
                 float zPos = reader.ReadSinglePacked();
@@ -232,7 +242,6 @@ namespace MLAPI.Prototyping
             if (!enabled) return;
             using (PooledBitReader reader = PooledBitReader.Get(stream))
             {
-
                 float xPos = reader.ReadSinglePacked();
                 float yPos = reader.ReadSinglePacked();
                 float zPos = reader.ReadSinglePacked();
@@ -320,16 +329,16 @@ namespace MLAPI.Prototyping
                 ClientSendInfo info = clientSendInfo[NetworkingManager.Singleton.ConnectedClientsList[i].ClientId];
                 Vector3 receiverPosition = NetworkingManager.Singleton.ConnectedClientsList[i].PlayerObject.transform.position;
                 Vector3 senderPosition = NetworkingManager.Singleton.ConnectedClients[OwnerClientId].PlayerObject.transform.position;
-                                
+
                 if (NetworkingManager.Singleton.NetworkTime - info.lastSent >= GetTimeForLerp(receiverPosition, senderPosition))
                 {
                     Vector3 pos = NetworkingManager.Singleton.ConnectedClients[OwnerClientId].PlayerObject.transform.position;
                     Vector3 rot = NetworkingManager.Singleton.ConnectedClients[OwnerClientId].PlayerObject.transform.rotation.eulerAngles;
-                    
+
                     info.lastSent = NetworkingManager.Singleton.NetworkTime;
                     info.lastMissedPosition = null;
                     info.lastMissedRotation = null;
-                    
+
                     using (PooledBitStream stream = PooledBitStream.Get())
                     {
                         using (PooledBitWriter writer = PooledBitWriter.Get(stream))
@@ -355,7 +364,7 @@ namespace MLAPI.Prototyping
         /// <param name="position">The position to teleport to</param>
         /// <param name="rotation">The rotation to teleport to</param>
         public void Teleport(Vector3 position, Quaternion rotation)
-        {   
+        {
             if (InterpolateServer && IsServer || IsClient)
             {
                 lerpStartPos = position;

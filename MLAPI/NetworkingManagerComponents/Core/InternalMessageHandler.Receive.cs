@@ -3,9 +3,13 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using MLAPI.Components;
+
 #if !DISABLE_CRYPTOGRAPHY
+
 using MLAPI.Cryptography;
+
 #endif
+
 using MLAPI.Data;
 using MLAPI.Logging;
 using MLAPI.Serialization;
@@ -16,6 +20,7 @@ namespace MLAPI.Internal
     internal static partial class InternalMessageHandler
     {
 #if !DISABLE_CRYPTOGRAPHY
+
         // Runs on client
         internal static void HandleHailRequest(uint clientId, Stream stream, int channelId)
         {
@@ -47,7 +52,7 @@ namespace MLAPI.Internal
                     // Read the ECDH
                     // Allocation justification: This runs on client and only once, at initial connection
                     serverDiffieHellmanPublicPart = reader.ReadByteArray();
-                    
+
                     // Verify the key exchange
                     if (netManager.NetworkConfig.SignKeyExchange)
                     {
@@ -64,7 +69,7 @@ namespace MLAPI.Internal
                                     if (LogHelper.CurrentLogLevel <= LogLevel.Normal) if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("Invalid signature. Disconnecting");
                                     netManager.StopClient();
                                     return;
-                                }   
+                                }
                             }
                         }
                     }
@@ -90,7 +95,7 @@ namespace MLAPI.Internal
                             {
                                 using (SHA256CryptoServiceProvider sha = new SHA256CryptoServiceProvider())
                                 {
-                                    writer.WriteByteArray(rsa.Encrypt(sha.ComputeHash(diffieHellmanPublicKey), false));   
+                                    writer.WriteByteArray(rsa.Encrypt(sha.ComputeHash(diffieHellmanPublicKey), false));
                                 }
                             }
                             else
@@ -129,7 +134,7 @@ namespace MLAPI.Internal
                             {
                                 byte[] clientHash = rsa.Decrypt(diffieHellmanPublicSignature, false);
                                 byte[] serverHash = sha.ComputeHash(diffieHellmanPublic);
-                                
+
                                 if (!CryptographyHelper.ConstTimeArrayEqual(clientHash, serverHash))
                                 {
                                     //Man in the middle.
@@ -149,7 +154,7 @@ namespace MLAPI.Internal
 
             netManager.PendingClients[clientId].ConnectionState = PendingClient.State.PendingConnection;
             netManager.PendingClients[clientId].KeyExchange = null; // Give to GC
-            
+
             // Send greetings, they have passed all the handshakes
             using (PooledBitStream outStream = PooledBitStream.Get())
             {
@@ -166,6 +171,7 @@ namespace MLAPI.Internal
             // Server greeted us, we can now initiate our request to connect.
             NetworkingManager.Singleton.SendConnectionRequest();
         }
+
 #endif
 
         internal static void HandleConnectionRequest(uint clientId, Stream stream, int channelId)
@@ -199,7 +205,7 @@ namespace MLAPI.Internal
                 netManager.LocalClientId = reader.ReadUInt32Packed();
                 uint sceneIndex = 0;
                 Guid sceneSwitchProgressGuid = new Guid();
-                if (netManager.NetworkConfig.EnableSceneSwitching) 
+                if (netManager.NetworkConfig.EnableSceneSwitching)
                 {
                     sceneIndex = reader.ReadUInt32Packed();
                     sceneSwitchProgressGuid = new Guid(reader.ReadByteArray());
@@ -211,7 +217,7 @@ namespace MLAPI.Internal
                 netManager.NetworkTime = netTime + (msDelay / 1000f);
 
                 netManager.ConnectedClients.Add(netManager.LocalClientId, new NetworkedClient() { ClientId = netManager.LocalClientId });
-                
+
                 SpawnManager.DestroySceneObjects();
                 int objectCount = reader.ReadInt32Packed();
                 for (int i = 0; i < objectCount; i++)
@@ -241,6 +247,13 @@ namespace MLAPI.Internal
                 if (netManager.NetworkConfig.EnableSceneSwitching)
                 {
                     NetworkSceneManager.OnSceneSwitch(sceneIndex, sceneSwitchProgressGuid);
+                }
+                else
+                {
+                    if (netManager.ConnectedClients.TryGetValue(netManager.LocalClientId, out var player))
+                    {
+                        player.PlayerObject?.InvokeBehaviourNetworkReady();
+                    }
                 }
 
                 netManager.IsConnectedClient = true;
@@ -299,9 +312,17 @@ namespace MLAPI.Internal
 
         internal static void HandleClientSwitchSceneCompleted(uint clientId, Stream stream, int channelId)
         {
-            using (PooledBitReader reader = PooledBitReader.Get(stream)) 
+            using (PooledBitReader reader = PooledBitReader.Get(stream))
             {
                 NetworkSceneManager.OnClientSwitchSceneCompleted(clientId, new Guid(reader.ReadByteArray()));
+            }
+        }
+
+        internal static void HandleFullSwitchCompleted()
+        {
+            foreach (var keyValuePair in SpawnManager.SpawnedObjects)
+            {
+                keyValuePair.Value.InvokeBehaviourNetworkReady();
             }
         }
 
@@ -348,7 +369,7 @@ namespace MLAPI.Internal
                     float xRot = reader.ReadSinglePacked();
                     float yRot = reader.ReadSinglePacked();
                     float zRot = reader.ReadSinglePacked();
-                    
+
                     NetworkedObject netObject = SpawnManager.CreateSpawnedObject(SpawnManager.GetNetworkedPrefabIndexOfHash(prefabHash), networkId, ownerId, isPlayerObject,
                         sceneSpawnedInIndex, sceneDelayedSpawn, destroyWithScene, new Vector3(xPos, yPos, zPos), Quaternion.Euler(xRot, yRot, zRot), true, stream, false, 0, true);
                 }
@@ -424,7 +445,7 @@ namespace MLAPI.Internal
                 }
             }
         }
-        
+
         internal static void HandleServerRPC(uint clientId, Stream stream, int channelId)
         {
             using (PooledBitReader reader = PooledBitReader.Get(stream))
@@ -433,8 +454,8 @@ namespace MLAPI.Internal
                 ushort behaviourId = reader.ReadUInt16Packed();
                 ulong hash = reader.ReadUInt64Packed();
 
-                if (SpawnManager.SpawnedObjects.ContainsKey(networkId)) 
-                { 
+                if (SpawnManager.SpawnedObjects.ContainsKey(networkId))
+                {
                     NetworkedBehaviour behaviour = SpawnManager.SpawnedObjects[networkId].GetBehaviourAtOrderIndex(behaviourId);
                     if (behaviour != null)
                     {
@@ -443,7 +464,7 @@ namespace MLAPI.Internal
                 }
             }
         }
-        
+
         internal static void HandleServerRPCRequest(uint clientId, Stream stream, int channelId, SecuritySendFlags security)
         {
             using (PooledBitReader reader = PooledBitReader.Get(stream))
@@ -453,8 +474,8 @@ namespace MLAPI.Internal
                 ulong hash = reader.ReadUInt64Packed();
                 ulong responseId = reader.ReadUInt64Packed();
 
-                if (SpawnManager.SpawnedObjects.ContainsKey(networkId)) 
-                { 
+                if (SpawnManager.SpawnedObjects.ContainsKey(networkId))
+                {
                     NetworkedBehaviour behaviour = SpawnManager.SpawnedObjects[networkId].GetBehaviourAtOrderIndex(behaviourId);
                     if (behaviour != null)
                     {
@@ -467,14 +488,14 @@ namespace MLAPI.Internal
                                 responseWriter.WriteUInt64Packed(responseId);
                                 responseWriter.WriteObjectPacked(result);
                             }
-                            
+
                             InternalMessageHandler.Send(clientId, MLAPIConstants.MLAPI_SERVER_RPC_RESPONSE, MessageManager.reverseChannels[channelId], responseStream, security, SpawnManager.SpawnedObjects[networkId]);
                         }
                     }
                 }
             }
         }
-        
+
         internal static void HandleServerRPCResponse(uint clientId, Stream stream, int channelId)
         {
             using (PooledBitReader reader = PooledBitReader.Get(stream))
@@ -486,16 +507,16 @@ namespace MLAPI.Internal
                     RpcResponseBase responseBase = ResponseMessageManager.GetByKey(responseId);
 
                     if (responseBase.ClientId != clientId) return;
-                    
+
                     ResponseMessageManager.Remove(responseId);
-                    
+
                     responseBase.IsDone = true;
                     responseBase.Result = reader.ReadObjectPacked(responseBase.Type);
                     responseBase.IsSuccessful = true;
                 }
             }
         }
-        
+
         internal static void HandleClientRPC(uint clientId, Stream stream, int channelId)
         {
             using (PooledBitReader reader = PooledBitReader.Get(stream))
@@ -503,8 +524,8 @@ namespace MLAPI.Internal
                 uint networkId = reader.ReadUInt32Packed();
                 ushort behaviourId = reader.ReadUInt16Packed();
                 ulong hash = reader.ReadUInt64Packed();
-                
-                if (SpawnManager.SpawnedObjects.ContainsKey(networkId)) 
+
+                if (SpawnManager.SpawnedObjects.ContainsKey(networkId))
                 {
                     NetworkedBehaviour behaviour = SpawnManager.SpawnedObjects[networkId].GetBehaviourAtOrderIndex(behaviourId);
                     if (behaviour != null)
@@ -514,7 +535,7 @@ namespace MLAPI.Internal
                 }
             }
         }
-        
+
         internal static void HandleClientRPCRequest(uint clientId, Stream stream, int channelId, SecuritySendFlags security)
         {
             using (PooledBitReader reader = PooledBitReader.Get(stream))
@@ -523,14 +544,14 @@ namespace MLAPI.Internal
                 ushort behaviourId = reader.ReadUInt16Packed();
                 ulong hash = reader.ReadUInt64Packed();
                 ulong responseId = reader.ReadUInt64Packed();
-                
-                if (SpawnManager.SpawnedObjects.ContainsKey(networkId)) 
+
+                if (SpawnManager.SpawnedObjects.ContainsKey(networkId))
                 {
                     NetworkedBehaviour behaviour = SpawnManager.SpawnedObjects[networkId].GetBehaviourAtOrderIndex(behaviourId);
                     if (behaviour != null)
                     {
                         object result = behaviour.OnRemoteClientRPC(hash, clientId, stream);
-                        
+
                         using (PooledBitStream responseStream = PooledBitStream.Get())
                         {
                             using (PooledBitWriter responseWriter = PooledBitWriter.Get(responseStream))
@@ -538,14 +559,14 @@ namespace MLAPI.Internal
                                 responseWriter.WriteUInt64Packed(responseId);
                                 responseWriter.WriteObjectPacked(result);
                             }
-                            
+
                             InternalMessageHandler.Send(clientId, MLAPIConstants.MLAPI_CLIENT_RPC_RESPONSE, MessageManager.reverseChannels[channelId], responseStream, security, null);
                         }
                     }
                 }
             }
         }
-        
+
         internal static void HandleClientRPCResponse(uint clientId, Stream stream, int channelId)
         {
             using (PooledBitReader reader = PooledBitReader.Get(stream))
@@ -555,18 +576,18 @@ namespace MLAPI.Internal
                 if (ResponseMessageManager.ContainsKey(responseId))
                 {
                     RpcResponseBase responseBase = ResponseMessageManager.GetByKey(responseId);
-                    
+
                     if (responseBase.ClientId != clientId) return;
-                    
+
                     ResponseMessageManager.Remove(responseId);
-                    
+
                     responseBase.IsDone = true;
                     responseBase.Result = reader.ReadObjectPacked(responseBase.Type);
                     responseBase.IsSuccessful = true;
                 }
             }
         }
-        
+
         internal static void HandleCustomMessage(uint clientId, Stream stream, int channelId)
         {
             NetworkingManager.Singleton.InvokeOnIncomingCustomMessage(clientId, stream);

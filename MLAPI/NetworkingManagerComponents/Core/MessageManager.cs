@@ -1,13 +1,19 @@
 ﻿#if !DISABLE_CRYPTOGRAPHY
+
 using MLAPI.Cryptography;
+
 #endif
+
 using MLAPI.Data;
 using MLAPI.Logging;
 using MLAPI.Serialization;
 using System;
 using System.Collections.Generic;
+
 #if !DISABLE_CRYPTOGRAPHY
+
 using System.Security.Cryptography;
+
 #endif
 
 namespace MLAPI.Internal
@@ -44,7 +50,6 @@ namespace MLAPI.Internal
                     else if (isEncrypted) security = SecuritySendFlags.Encrypted;
                     else if (isAuthenticated) security = SecuritySendFlags.Authenticated;
                     else security = SecuritySendFlags.None;
-                    
 
 #if !DISABLE_CRYPTOGRAPHY
                     if (isEncrypted || isAuthenticated)
@@ -88,7 +93,6 @@ namespace MLAPI.Internal
                             using (HMACSHA256 hmac = new HMACSHA256(key))
                             {
                                 byte[] computedHmac = hmac.ComputeHash(inputStream.GetBuffer(), 0, (int)inputStream.Length);
-
 
                                 if (!CryptographyHelper.ConstTimeArrayEqual(computedHmac, HMAC_BUFFER))
                                 {
@@ -188,6 +192,11 @@ namespace MLAPI.Internal
         {
             try
             {
+                if (messageBody == null)
+                {
+                    messageBody = BitStreamPool.GetStream();
+                }
+
                 bool encrypted = ((flags & SecuritySendFlags.Encrypted) == SecuritySendFlags.Encrypted) && NetworkingManager.Singleton.NetworkConfig.EnableEncryption;
                 bool authenticated = (flags & SecuritySendFlags.Authenticated) == SecuritySendFlags.Authenticated && NetworkingManager.Singleton.NetworkConfig.EnableEncryption;
 
@@ -197,7 +206,7 @@ namespace MLAPI.Internal
                 {
                     outWriter.WriteBit(encrypted);
                     outWriter.WriteBit(authenticated);
-                    
+
 #if !DISABLE_CRYPTOGRAPHY
                     if (authenticated || encrypted)
                     {
