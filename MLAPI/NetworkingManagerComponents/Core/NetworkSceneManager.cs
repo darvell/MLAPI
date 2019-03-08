@@ -25,7 +25,7 @@ namespace MLAPI.Components
         internal static uint currentSceneIndex = 0;
         internal static Guid currentSceneSwitchProgressGuid = new Guid();
 
-        internal static void SetCurrentSceneIndex()
+        public static void SetCurrentSceneIndex()
         {
             if (!sceneNameToIndex.ContainsKey(SceneManager.GetActiveScene().name))
             {
@@ -92,7 +92,7 @@ namespace MLAPI.Components
         {
             if (NetworkingManager.Singleton.IsServer || NetworkingManager.Singleton.IsHost)
             {
-                InternalMessageHandler.Send(MLAPIConstants.MLAPI_FULL_SWITCH_COMPLETE, "MLAPI_INTERNAL", null, SecuritySendFlags.None, null);
+                InternalMessageHandler.Send(MLAPIConstants.MLAPI_FULL_SWITCH_COMPLETE, "MLAPI_INTERNAL", BitStreamPool.GetStream(), SecuritySendFlags.None, null);
                 foreach (var networkedObject in SpawnManager.SpawnedObjectsList.Where(x => x?.IsSpawned == true))
                 {
                     networkedObject.InvokeBehaviourNetworkReady();
@@ -218,20 +218,6 @@ namespace MLAPI.Components
             }
 
             isSwitching = false;
-            if (NetworkingManager.Singleton.IsServer)
-            {
-                foreach (var keyValuePair in SpawnManager.SpawnedObjects.Where(x => x.Key == NetworkingManager.Singleton.ServerClientId || x.Key == NetworkingManager.Singleton.LocalClientId))
-                {
-                    keyValuePair.Value.InvokeBehaviourNetworkReady();
-                }
-            }
-            else
-            {
-                foreach (var keyValuePair in SpawnManager.SpawnedObjects.Where(x => x.Value.OwnerClientId == NetworkingManager.Singleton.LocalClientId))
-                {
-                    keyValuePair.Value.InvokeBehaviourNetworkReady();
-                }
-            }
         }
 
         /// <summary>

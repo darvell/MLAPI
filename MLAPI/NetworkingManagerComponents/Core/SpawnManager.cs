@@ -333,7 +333,10 @@ namespace MLAPI.Components
                 netObject.NetworkedPrefabName = netManager.NetworkConfig.NetworkedPrefabs[networkedPrefabId].name;
                 netObject.IsSpawned = false;
 
-                if (netManager.IsServer) netObject.NetworkId = GetNetworkObjectId();
+                if (netManager.IsServer)
+                {
+                    netObject.NetworkId = GetNetworkObjectId();
+                }
                 else netObject.NetworkId = networkId;
 
                 netObject.destroyWithScene = destroyWithScene;
@@ -413,12 +416,16 @@ namespace MLAPI.Components
 
                 SpawnedObjects.Add(netObject.NetworkId, netObject);
                 SpawnedObjectsList.Add(netObject);
+
+                netObject.observers.Add(netManager.NetworkConfig.NetworkTransport.ServerClientId);
+
                 if (playerObject && NetworkingManager.Singleton.IsServer)
                 {
                     NetworkingManager.Singleton.ConnectedClients[owner].PlayerObject = netObject;
                     if (!netObject.observers.Contains(owner))
                     {
                         netObject.observers.Add(owner);
+                        netObject.observers.Add(netManager.NetworkConfig.NetworkTransport.ServerClientId);
                     }
                 }
 

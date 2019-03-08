@@ -92,7 +92,7 @@ namespace MLAPI.Components
 
                 NetworkingManager.Singleton.StopCoroutine(timeOutCoroutine);
 
-                foreach (var connectedClient in NetworkingManager.Singleton.ConnectedClients)
+                foreach (var connectedClient in DoneClients)
                 {
                     InternalMessageHandler.HandleFullSwitchCompleted();
                 }

@@ -46,8 +46,7 @@ namespace MLAPI.Internal
                     for (int i = 0; i < netManager.ConnectedClientsList.Count; i++)
                     {
                         if (NetworkingManager.Singleton.IsServer && netManager.ConnectedClientsList[i].ClientId == NetworkingManager.Singleton.ServerClientId || (targetObject != null && !targetObject.observers.Contains(netManager.ConnectedClientsList[i].ClientId))) continue;
-                        byte error;
-                        netManager.NetworkConfig.NetworkTransport.QueueMessageForSending(netManager.ConnectedClientsList[i].ClientId, stream.GetBuffer(), (int)stream.Length, MessageManager.channels[channelName], false, out error);
+                        netManager.NetworkConfig.NetworkTransport.QueueMessageForSending(netManager.ConnectedClientsList[i].ClientId, stream.GetBuffer(), (int)stream.Length, MessageManager.channels[channelName], false, out byte error);
                     }
                     NetworkProfiler.EndEvent();
                 }
@@ -79,12 +78,11 @@ namespace MLAPI.Internal
                     for (int i = 0; i < netManager.ConnectedClientsList.Count; i++)
                     {
                         if (netManager.ConnectedClientsList[i].ClientId == clientIdToIgnore ||
-                            (NetworkingManager.Singleton.IsServer && netManager.ConnectedClientsList[i].ClientId == NetworkingManager.Singleton.ServerClientId) || 
+                            (NetworkingManager.Singleton.IsServer && netManager.ConnectedClientsList[i].ClientId == NetworkingManager.Singleton.ServerClientId) ||
                             (targetObject != null && !targetObject.observers.Contains(netManager.ConnectedClientsList[i].ClientId)))
                             continue;
 
-                        byte error;
-                        netManager.NetworkConfig.NetworkTransport.QueueMessageForSending(netManager.ConnectedClientsList[i].ClientId, stream.GetBuffer(), (int)stream.Length, MessageManager.channels[channelName], false, out error);
+                        netManager.NetworkConfig.NetworkTransport.QueueMessageForSending(netManager.ConnectedClientsList[i].ClientId, stream.GetBuffer(), (int)stream.Length, MessageManager.channels[channelName], false, out byte error);
                     }
                     NetworkProfiler.EndEvent();
                 }
