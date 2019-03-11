@@ -293,7 +293,7 @@ namespace MLAPI
                 if (LogHelper.CurrentLogLevel <= LogLevel.Error) LogHelper.LogError("Importing of certificate failed: " + ex.ToString());
             }
 
-            if (NetworkConfig.Transport?.Type == null)
+            if (NetworkConfig.Transport?.Type == null || NetworkConfig.Transport?.Type.HasInterface(typeof(IUDPTransport)) != true)
             {
                 throw new NullReferenceException("The NetworkTransport is null.");
             }
