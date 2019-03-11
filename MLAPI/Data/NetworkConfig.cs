@@ -7,6 +7,7 @@ using MLAPI.Serialization;
 using MLAPI.Transports;
 using BitStream = MLAPI.Serialization.BitStream;
 using System.Security.Cryptography.X509Certificates;
+using MLAPI.Transports.UNET;
 
 namespace MLAPI.Configuration
 {
@@ -23,9 +24,10 @@ namespace MLAPI.Configuration
         /// <summary>
         /// The transport to be used
         /// </summary>
-        public DefaultTransport Transport = DefaultTransport.UNET;
+        [ClassImplements(typeof(IUDPTransport), Grouping = ClassGrouping.None)]
+        public ClassTypeReference Transport = typeof(UnetTransport);
         /// <summary>
-        /// The transport hosts the sever uses
+        /// The transport hosts the server uses
         /// </summary>
         public IUDPTransport NetworkTransport = null;
         /// <summary>
@@ -195,7 +197,7 @@ namespace MLAPI.Configuration
                 using (PooledBitWriter writer = PooledBitWriter.Get(stream))
                 {
                     writer.WriteUInt16Packed(config.ProtocolVersion);
-                    writer.WriteBits((byte)config.Transport, 5);
+                    writer.WriteString(Transport.Type.AssemblyQualifiedName);
 
                     writer.WriteUInt16Packed((ushort)config.Channels.Count);
                     for (int i = 0; i < config.Channels.Count; i++)
@@ -249,7 +251,14 @@ namespace MLAPI.Configuration
                 {
 
                     config.ProtocolVersion = reader.ReadUInt16Packed();
-                    config.Transport = (DefaultTransport)reader.ReadBits(5);
+                    string transportType = reader.ReadString().ToString();
+                    config.Transport = Type.GetType(transportType, false);
+
+                    if (config.Transport == null)
+                    {
+                        Debug.LogError($"[MLAPI] Transport {transportType} not found.");
+                        config.Transport = typeof(UnetTransport);
+                    }
 
                     ushort channelCount = reader.ReadUInt16Packed();
                     config.Channels.Clear();

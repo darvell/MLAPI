@@ -293,12 +293,12 @@ namespace MLAPI
                 if (LogHelper.CurrentLogLevel <= LogLevel.Error) LogHelper.LogError("Importing of certificate failed: " + ex.ToString());
             }
 
-            if (NetworkConfig.Transport == DefaultTransport.UNET)
-                NetworkConfig.NetworkTransport = new UnetTransport();
-            else if (NetworkConfig.Transport == DefaultTransport.MLAPI_Relay)
-                NetworkConfig.NetworkTransport = new RelayedTransport();
-            else if (NetworkConfig.Transport == DefaultTransport.Custom && NetworkConfig.NetworkTransport == null)
-                throw new NullReferenceException("The current NetworkTransport is null");
+            if (NetworkConfig.Transport?.Type == null)
+            {
+                throw new NullReferenceException("The NetworkTransport is null.");
+            }
+
+            NetworkConfig.NetworkTransport = (IUDPTransport) Activator.CreateInstance(NetworkConfig.Transport);
 
             object settings = NetworkConfig.NetworkTransport.GetSettings(); //Gets a new "settings" object for the transport currently used.
 
