@@ -98,6 +98,7 @@ namespace MLAPI
             if (!_isAdded)
             {
                 NetworkedObject.NetworkedBehaviours.Add(this);
+                _isAdded = true;
             }
 
             if (_networkedObject?.childNetworkedBehaviours?.Contains(this) == false)
@@ -119,6 +120,7 @@ namespace MLAPI
 
         private void OnDestroy()
         {
+            _isAdded = false;
             NetworkedObject.NetworkedBehaviours.Remove(this); // O(n)
             CachedClientRpcs.Remove(this);
             CachedServerRpcs.Remove(this);
