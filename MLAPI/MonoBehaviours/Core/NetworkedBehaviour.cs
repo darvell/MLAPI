@@ -89,17 +89,31 @@ namespace MLAPI
         /// </summary>
         public uint OwnerClientId => NetworkedObject.OwnerClientId;
 
+        private bool _isAdded = false;
         private void OnEnable()
         {
             if (_networkedObject == null)
                 _networkedObject = GetComponentInParent<NetworkedObject>();
 
-            NetworkedObject.NetworkedBehaviours.Add(this);
+            if (!_isAdded)
+            {
+                NetworkedObject.NetworkedBehaviours.Add(this);
+            }
+
+            if (_networkedObject?.childNetworkedBehaviours?.Contains(this) == false)
+            {
+                _networkedObject?.childNetworkedBehaviours?.Add(this);
+            }
+
             OnEnabled();
         }
 
         private void OnDisable()
         {
+            if (_networkedObject == null)
+                _networkedObject = GetComponentInParent<NetworkedObject>();
+
+            _networkedObject?.childNetworkedBehaviours?.Remove(this);
             OnDisabled();
         }
 
