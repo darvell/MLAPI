@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace MLAPI.Data
 {
@@ -14,15 +15,19 @@ namespace MLAPI.Data
         private const ulong FNV_prime64 = 1099511628211;
 
         /// <summary>
-        /// non cryptographic stable hash code,  
+        /// non cryptographic stable hash code,
         /// it will always return the same hash for the same
-        /// string.  
-        /// 
+        /// string.
+        ///
         /// This is simply an implementation of FNV-1 32 bit xor folded to 16 bit
         /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
         /// <returns>The stable hash32.</returns>
         /// <param name="txt">Text.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static ushort GetStableHash16(this string txt)
         {
             uint hash32 = txt.GetStableHash32();
@@ -30,17 +35,20 @@ namespace MLAPI.Data
             return (ushort)((hash32 >> 16) ^ hash32);
         }
 
-
         /// <summary>
-        /// non cryptographic stable hash code,  
+        /// non cryptographic stable hash code,
         /// it will always return the same hash for the same
-        /// string.  
-        /// 
+        /// string.
+        ///
         /// This is simply an implementation of FNV-1 32 bit
         /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
         /// <returns>The stable hash32.</returns>
         /// <param name="txt">Text.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static uint GetStableHash32(this string txt)
         {
             unchecked
@@ -57,15 +65,19 @@ namespace MLAPI.Data
         }
 
         /// <summary>
-        /// non cryptographic stable hash code,  
+        /// non cryptographic stable hash code,
         /// it will always return the same hash for the same
-        /// string.  
-        /// 
+        /// string.
+        ///
         /// This is simply an implementation of FNV-1  64 bit
         /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
         /// <returns>The stable hash32.</returns>
         /// <param name="txt">Text.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static ulong GetStableHash64(this string txt)
         {
             unchecked
@@ -82,15 +94,19 @@ namespace MLAPI.Data
         }
 
         /// <summary>
-        /// non cryptographic stable hash code,  
+        /// non cryptographic stable hash code,
         /// it will always return the same hash for the same
-        /// string.  
-        /// 
+        /// string.
+        ///
         /// This is simply an implementation of FNV-1 32 bit xor folded to 16 bit
         /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
         /// <returns>The stable hash32.</returns>
         /// <param name="bytes">Text.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static ushort GetStableHash16(this byte[] bytes)
         {
             uint hash32 = bytes.GetStableHash32();
@@ -99,15 +115,19 @@ namespace MLAPI.Data
         }
 
         /// <summary>
-        /// non cryptographic stable hash code,  
+        /// non cryptographic stable hash code,
         /// it will always return the same hash for the same
-        /// string.  
-        /// 
+        /// string.
+        ///
         /// This is simply an implementation of FNV-1 32 bit
         /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
         /// <returns>The stable hash32.</returns>
         /// <param name="bytes">Text.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static uint GetStableHash32(this byte[] bytes)
         {
             unchecked
@@ -124,15 +144,19 @@ namespace MLAPI.Data
         }
 
         /// <summary>
-        /// non cryptographic stable hash code,  
+        /// non cryptographic stable hash code,
         /// it will always return the same hash for the same
-        /// string.  
-        /// 
+        /// string.
+        ///
         /// This is simply an implementation of FNV-1  64 bit
         /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
         /// </summary>
         /// <returns>The stable hash32.</returns>
         /// <param name="bytes">Text.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static ulong GetStableHash64(this byte[] bytes)
         {
             unchecked

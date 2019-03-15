@@ -1,7 +1,8 @@
-﻿using System;
+﻿using MLAPI.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using MLAPI.Logging;
+using System.Runtime.CompilerServices;
 
 namespace MLAPI.Serialization
 {
@@ -18,6 +19,10 @@ namespace MLAPI.Serialization
         /// Retrieves an expandable PooledBitStream from the pool
         /// </summary>
         /// <returns>An expandable PooledBitStream</returns>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static PooledBitStream GetStream()
         {
             if (overflowStreams.Count > 0)
@@ -31,8 +36,8 @@ namespace MLAPI.Serialization
             if (streams.Count == 0)
             {
                 if (createdStreams == 254) if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("255 streams have been created. Did you forget to dispose?");
-                else if (createdStreams < 255) createdStreams++;
-                
+                    else if (createdStreams < 255) createdStreams++;
+
                 return new PooledBitStream();
             }
 
@@ -47,6 +52,10 @@ namespace MLAPI.Serialization
         /// Puts a PooledBitStream back into the pool
         /// </summary>
         /// <param name="stream">The stream to put in the pool</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static void PutBackInPool(PooledBitStream stream)
         {
             if (streams.Count > 16)
@@ -78,19 +87,23 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="stream">The stream the writer should write to</param>
         /// <returns>A PooledBitWriter</returns>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static PooledBitWriter GetWriter(Stream stream)
         {
             if (writers.Count == 0)
             {
                 if (createdWriters == 254) if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("255 writers have been created. Did you forget to dispose?");
                     else if (createdWriters < 255) createdWriters++;
-                
+
                 return new PooledBitWriter(stream);
             }
 
             PooledBitWriter writer = writers.Dequeue();
             writer.SetStream(stream);
-            
+
             return writer;
         }
 
@@ -98,6 +111,10 @@ namespace MLAPI.Serialization
         /// Puts a PooledBitWriter back into the pool
         /// </summary>
         /// <param name="writer">The writer to put in the pool</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static void PutBackInPool(PooledBitWriter writer)
         {
             if (writers.Count < 64) writers.Enqueue(writer);
@@ -118,13 +135,17 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="stream">The stream the reader should read from</param>
         /// <returns>A PooledBitReader</returns>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static PooledBitReader GetReader(Stream stream)
         {
             if (readers.Count == 0)
             {
                 if (createdReaders == 254) if (LogHelper.CurrentLogLevel <= LogLevel.Normal) LogHelper.LogWarning("255 readers have been created. Did you forget to dispose?");
-                else if (createdReaders < 255) createdReaders++;
-                
+                    else if (createdReaders < 255) createdReaders++;
+
                 return new PooledBitReader(stream);
             }
 
@@ -155,6 +176,10 @@ namespace MLAPI.Serialization
         /// Gets a PooledBitStream from the static BitStreamPool
         /// </summary>
         /// <returns>PooledBitStream</returns>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static PooledBitStream Get()
         {
             PooledBitStream stream = BitStreamPool.GetStream();
@@ -181,16 +206,19 @@ namespace MLAPI.Serialization
     public sealed class PooledBitWriter : BitWriter, IDisposable
     {
         private bool isDisposed = false;
-        
+
         internal PooledBitWriter(Stream stream) : base(stream)
         {
-
         }
 
         /// <summary>
         /// Gets a PooledBitWriter from the static BitWriterPool
         /// </summary>
         /// <returns>PooledBitWriter</returns>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static PooledBitWriter Get(Stream stream)
         {
             PooledBitWriter writer = BitWriterPool.GetWriter(stream);
@@ -217,7 +245,7 @@ namespace MLAPI.Serialization
     public sealed class PooledBitReader : BitReader, IDisposable
     {
         private bool isDisposed = false;
-        
+
         internal PooledBitReader(Stream stream) : base(stream)
         {
         }
@@ -226,6 +254,10 @@ namespace MLAPI.Serialization
         /// Gets a PooledBitReader from the static BitReaderPool
         /// </summary>
         /// <returns>PooledBitReader</returns>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public static PooledBitReader Get(Stream stream)
         {
             PooledBitReader reader = BitReaderPool.GetReader(stream);

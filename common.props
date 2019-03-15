@@ -2,8 +2,8 @@
   <PropertyGroup>
     <Configurations>Debug;Release;Debug_Lite;Release_Lite</Configurations>
     <LangVersion>7</LangVersion>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>None</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>Full</DebugType>
   </PropertyGroup>
 
 

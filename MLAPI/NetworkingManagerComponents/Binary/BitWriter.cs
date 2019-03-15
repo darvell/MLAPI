@@ -6,6 +6,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace MLAPI.Serialization
@@ -43,6 +44,10 @@ namespace MLAPI.Serialization
         /// Writes a boxed object in a packed format
         /// </summary>
         /// <param name="value">The object to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteObjectPacked(object value)
         {
             if (value is byte)
@@ -149,23 +154,23 @@ namespace MLAPI.Serialization
                 WriteCharPacked((char)value);
                 return;
             }
-            else if (value.GetType().IsEnum) 
+            else if (value.GetType().IsEnum)
             {
                 WriteInt32Packed((int)value);
                 return;
             }
-            else if (value is GameObject) 
+            else if (value is GameObject)
             {
-                if(value == null) 
+                if (value == null)
                 {
                     throw new ArgumentException("BitWriter cannot write GameObject types with a null value");
                 }
                 NetworkedObject networkedObject = ((GameObject)value).GetComponent<NetworkedObject>();
-                if(networkedObject == null) 
+                if (networkedObject == null)
                 {
                     throw new ArgumentException("BitWriter cannot write GameObject types that does not has a NetworkedObject component attached. GameObject: " + ((GameObject)value).name);
-                } 
-                else 
+                }
+                else
                 {
                     WriteUInt64Packed(networkedObject.NetworkId);
                 }
@@ -173,23 +178,23 @@ namespace MLAPI.Serialization
             }
             else if (value is NetworkedObject)
             {
-                if (value == null) 
+                if (value == null)
                 {
                     throw new ArgumentException("BitWriter cannot write NetworkedObject types with a null value");
                 }
                 WriteUInt64Packed(((NetworkedObject)value).NetworkId);
                 return;
-            } 
+            }
             else if (value is NetworkedBehaviour)
             {
-                if(value == null) 
+                if (value == null)
                 {
                     throw new ArgumentException("BitWriter cannot write NetworkedBehaviour types with a null value");
                 }
                 WriteUInt64Packed(((NetworkedBehaviour)value).NetworkId);
                 WriteUInt16Packed(((NetworkedBehaviour)value).GetBehaviourId());
                 return;
-            } 
+            }
             else if (value is IBitWritable)
             {
                 if (value == null)
@@ -198,8 +203,7 @@ namespace MLAPI.Serialization
                 }
                 ((IBitWritable)value).Write(this.sink);
                 return;
-            } 
-            
+            }
 
             throw new ArgumentException("BitWriter cannot write type " + value.GetType().Name);
         }
@@ -208,6 +212,10 @@ namespace MLAPI.Serialization
         /// Write single-precision floating point value to the stream
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteSingle(float value)
         {
             WriteUInt32(new UIntFloat
@@ -220,6 +228,10 @@ namespace MLAPI.Serialization
         /// Write double-precision floating point value to the stream
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteDouble(double value)
         {
             WriteUInt64(new UIntFloat
@@ -232,6 +244,10 @@ namespace MLAPI.Serialization
         /// Write single-precision floating point value to the stream as a varint
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteSinglePacked(float value)
         {
             WriteUInt32Packed(new UIntFloat
@@ -244,6 +260,10 @@ namespace MLAPI.Serialization
         /// Write double-precision floating point value to the stream as a varint
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteDoublePacked(double value)
         {
             WriteUInt64Packed(new UIntFloat
@@ -256,6 +276,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes two non-packed Vector3 from the ray to the stream
         /// </summary>
         /// <param name="ray">Ray to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteRay(Ray ray)
         {
             WriteVector3(ray.origin);
@@ -266,6 +290,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes two packed Vector3 from the ray to the stream
         /// </summary>
         /// <param name="ray">Ray to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteRayPacked(Ray ray)
         {
             WriteVector3Packed(ray.origin);
@@ -276,6 +304,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes four non-varint floats from the color to the stream
         /// </summary>
         /// <param name="color">Color to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteColor(Color color)
         {
             WriteSingle(color.r);
@@ -288,6 +320,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes four varint floats from the color to the stream
         /// </summary>
         /// <param name="color">Color to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteColorPacked(Color color)
         {
             WriteSinglePacked(color.r);
@@ -300,6 +336,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes four non-varint floats from the color to the stream
         /// </summary>
         /// <param name="color32">Color32 to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteColor32(Color32 color32)
         {
             WriteSingle(color32.r);
@@ -312,6 +352,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes two non-varint floats from the vector to the stream
         /// </summary>
         /// <param name="vector2">Vector to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteVector2(Vector2 vector2)
         {
             WriteSingle(vector2.x);
@@ -322,6 +366,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes two varint floats from the vector to the stream
         /// </summary>
         /// <param name="vector2">Vector to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteVector2Packed(Vector2 vector2)
         {
             WriteSinglePacked(vector2.x);
@@ -332,6 +380,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes three non-varint floats from the vector to the stream
         /// </summary>
         /// <param name="vector3">Vector to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteVector3(Vector3 vector3)
         {
             WriteSingle(vector3.x);
@@ -343,6 +395,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes three varint floats from the vector to the stream
         /// </summary>
         /// <param name="vector3">Vector to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteVector3Packed(Vector3 vector3)
         {
             WriteSinglePacked(vector3.x);
@@ -354,6 +410,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes four non-varint floats from the vector to the stream
         /// </summary>
         /// <param name="vector4">Vector to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteVector4(Vector4 vector4)
         {
             WriteSingle(vector4.x);
@@ -366,6 +426,10 @@ namespace MLAPI.Serialization
         /// Convenience method that writes four varint floats from the vector to the stream
         /// </summary>
         /// <param name="vector4">Vector to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteVector4Packed(Vector4 vector4)
         {
             WriteSinglePacked(vector4.x);
@@ -381,6 +445,10 @@ namespace MLAPI.Serialization
         /// <param name="minValue">Minimum value that this value could be</param>
         /// <param name="maxValue">Maximum possible value that this could be</param>
         /// <param name="bytes">How many bytes the compressed result should occupy. Must be between 1 and 4 (inclusive)</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteRangedSingle(float value, float minValue, float maxValue, int bytes)
         {
             if (bytes < 1 || bytes > 4) throw new ArgumentOutOfRangeException("Result must occupy between 1 and 4 bytes!");
@@ -396,6 +464,10 @@ namespace MLAPI.Serialization
         /// <param name="minValue">Minimum value that this value could be</param>
         /// <param name="maxValue">Maximum possible value that this could be</param>
         /// <param name="bytes">How many bytes the compressed result should occupy. Must be between 1 and 8 (inclusive)</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteRangedDouble(double value, double minValue, double maxValue, int bytes)
         {
             if (bytes < 1 || bytes > 8) throw new ArgumentOutOfRangeException("Result must occupy between 1 and 8 bytes!");
@@ -409,6 +481,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="rotation">Rotation to write</param>
         /// <param name="bytesPerAngle">How many bytes each written angle should occupy. Must be between 1 and 4 (inclusive)</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteRotation(Quaternion rotation, int bytesPerAngle)
         {
             if (bytesPerAngle < 1 || bytesPerAngle > 4) throw new ArgumentOutOfRangeException("Bytes per angle must be at least 1 byte and at most 4 bytes!");
@@ -426,6 +502,10 @@ namespace MLAPI.Serialization
         /// Writes a single bit
         /// </summary>
         /// <param name="bit"></param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteBit(bool bit)
         {
             if (bitSink == null) throw new InvalidOperationException("Cannot write bits on a non BitStream stream");
@@ -436,6 +516,10 @@ namespace MLAPI.Serialization
         /// Writes a bool as a single bit
         /// </summary>
         /// <param name="value"></param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteBool(bool value)
         {
             if (bitSink == null) sink.WriteByte(value ? (byte)1 : (byte)0);
@@ -445,6 +529,10 @@ namespace MLAPI.Serialization
         /// <summary>
         /// Writes pad bits to make the underlying stream aligned
         /// </summary>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WritePadBits()
         {
             while (!bitSink.BitAligned) WriteBit(false);
@@ -454,12 +542,21 @@ namespace MLAPI.Serialization
         /// Write the lower half (lower nibble) of a byte.
         /// </summary>
         /// <param name="value">Value containing nibble to write.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteNibble(byte value) => WriteBits(value, 4);
+
         /// <summary>
         /// Write either the upper or lower nibble of a byte to the stream.
         /// </summary>
         /// <param name="value">Value holding the nibble</param>
         /// <param name="upper">Whether or not the upper nibble should be written. True to write the four high bits, else writes the four low bits.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteNibble(byte value, bool upper) => WriteNibble((byte)(value >> (upper ? 4 : 0)));
 
         /// <summary>
@@ -467,6 +564,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="value">Value to get bits from.</param>
         /// <param name="bitCount">Amount of bits to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteBits(ulong value, int bitCount)
         {
             if (bitSink == null) throw new InvalidOperationException("Cannot write bits on a non BitStream stream");
@@ -474,15 +575,18 @@ namespace MLAPI.Serialization
             if (bitCount < 0) throw new ArgumentOutOfRangeException("Cannot read fewer than 0 bits!");
             int count = 0;
             for (; count + 8 < bitCount; count += 8) bitSink.WriteByte((byte)(value >> count));
-            for (; count < bitCount; ++count) bitSink.WriteBit((value & (1UL << count))!=0);
+            for (; count < bitCount; ++count) bitSink.WriteBit((value & (1UL << count)) != 0);
         }
-
 
         /// <summary>
         /// Write bits to stream.
         /// </summary>
         /// <param name="value">Value to get bits from.</param>
         /// <param name="bitCount">Amount of bits to write.</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteBits(byte value, int bitCount)
         {
             if (bitSink == null) throw new InvalidOperationException("Cannot write bits on a non BitStream stream");
@@ -494,32 +598,54 @@ namespace MLAPI.Serialization
         /// Write a signed byte to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteSByte(sbyte value) => WriteByte((byte)value);
 
         /// <summary>
         /// Write a single character to the stream.
         /// </summary>
         /// <param name="c">Character to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteChar(char c) => WriteUInt16(c);
 
         /// <summary>
         /// Write an unsigned short (UInt16) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUInt16(ushort value)
         {
             sink.WriteByte((byte)value);
             sink.WriteByte((byte)(value >> 8));
         }
+
         /// <summary>
         /// Write a signed short (Int16) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteInt16(short value) => WriteUInt16((ushort)value);
+
         /// <summary>
         /// Write an unsigned int (UInt32) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUInt32(uint value)
         {
             sink.WriteByte((byte)value);
@@ -527,15 +653,25 @@ namespace MLAPI.Serialization
             sink.WriteByte((byte)(value >> 16));
             sink.WriteByte((byte)(value >> 24));
         }
+
         /// <summary>
         /// Write a signed int (Int32) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteInt32(int value) => WriteUInt32((uint)value);
+
         /// <summary>
         /// Write an unsigned long (UInt64) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUInt64(ulong value)
         {
             sink.WriteByte((byte)value);
@@ -547,46 +683,85 @@ namespace MLAPI.Serialization
             sink.WriteByte((byte)(value >> 48));
             sink.WriteByte((byte)(value >> 56));
         }
+
         /// <summary>
         /// Write a signed long (Int64) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteInt64(long value) => WriteUInt64((ulong)value);
 
         /// <summary>
         /// Write a signed short (Int16) as a ZigZag encoded varint to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteInt16Packed(short value) => WriteInt64Packed(value);
+
         /// <summary>
         /// Write an unsigned short (UInt16) as a varint to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUInt16Packed(ushort value) => WriteUInt64Packed(value);
+
         /// <summary>
         /// Write a two-byte character as a varint to the stream.
         /// </summary>
         /// <param name="c">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteCharPacked(char c) => WriteUInt16Packed(c);
+
         /// <summary>
         /// Write a signed int (Int32) as a ZigZag encoded varint to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteInt32Packed(int value) => WriteInt64Packed(value);
+
         /// <summary>
         /// Write an unsigned int (UInt32) as a varint to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUInt32Packed(uint value) => WriteUInt64Packed(value);
+
         /// <summary>
         /// Write a signed long (Int64) as a ZigZag encoded varint to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteInt64Packed(long value) => WriteUInt64Packed(Arithmetic.ZigZagEncode(value));
+
         /// <summary>
         /// Write an unsigned long (UInt64) as a varint to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUInt64Packed(ulong value)
         {
             if (value <= 240) WriteULongByte(value);
@@ -620,16 +795,30 @@ namespace MLAPI.Serialization
         /// Write a byte (in an int format) to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         private void WriteIntByte(int value) => WriteByte((byte)value);
+
         /// <summary>
         /// Write a byte (in a ulong format) to the stream.
         /// </summary>
         /// <param name="byteValue">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         private void WriteULongByte(ulong byteValue) => WriteByte((byte)byteValue);
+
         /// <summary>
         /// Write a byte to the stream.
         /// </summary>
         /// <param name="value">Value to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteByte(byte value)
         {
             sink.WriteByte(value);
@@ -641,6 +830,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="s">The string to write</param>
         /// <param name="oneByteChars">Wheter or not to use one byte per character. This will only allow ASCII</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteString(string s, bool oneByteChars = false)
         {
             WriteUInt32Packed((uint)s.Length);
@@ -654,6 +847,10 @@ namespace MLAPI.Serialization
         /// Writes a string in a packed format
         /// </summary>
         /// <param name="s"></param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteStringPacked(string s)
         {
             WriteUInt32Packed((uint)s.Length);
@@ -667,6 +864,10 @@ namespace MLAPI.Serialization
         /// <param name="write">The new array</param>
         /// <param name="compare">The previous array to use for diff</param>
         /// <param name="oneByteChars">Wheter or not to use single byte chars. This will only allow ASCII characters</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteStringDiff(string write, string compare, bool oneByteChars = false)
         {
 #if !ARRAY_DIFF_ALLOW_RESIZE
@@ -688,7 +889,6 @@ namespace MLAPI.Serialization
 #endif
             for (int i = 0; i < target; ++i)
             {
-
                 bool b = write[i] != compare[i];
 #if !ARRAY_WRITE_PREMAP
                 WriteBit(!b);
@@ -706,9 +906,12 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="write">The new string</param>
         /// <param name="compare">The previous string to use for diff</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteStringPackedDiff(string write, string compare)
         {
-
 #if !ARRAY_DIFF_ALLOW_RESIZE
             if (write.Length != compare.Length) throw new ArgumentException("Mismatched string lengths");
 #endif
@@ -728,7 +931,6 @@ namespace MLAPI.Serialization
 #endif
             for (int i = 0; i < target; ++i)
             {
-
                 bool b = write[i] != compare[i];
 #if !ARRAY_WRITE_PREMAP
                 WriteBit(!b);
@@ -740,6 +942,7 @@ namespace MLAPI.Serialization
         private void CheckLengths(Array a1, Array a2)
         {
         }
+
         [Conditional("ARRAY_WRITE_PREMAP")]
         private void WritePremap(Array a1, Array a2)
         {
@@ -748,6 +951,7 @@ namespace MLAPI.Serialization
             for (long i = 0; i < target; ++i) WriteBit(!a1.GetValue(i).Equals(a2.GetValue(i)));
             // TODO: Byte-align here
         }
+
         private ulong WriteArraySize(Array a1, Array a2, long length)
         {
             ulong write = (ulong)(length >= 0 ? length : a1.LongLength);
@@ -840,6 +1044,10 @@ namespace MLAPI.Serialization
         /// <param name="write">The new array</param>
         /// <param name="compare">The previous array to use for diff</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUShortArrayDiff(ushort[] write, ushort[] compare, long count = -1)
         {
             CheckLengths(write, compare);
@@ -860,6 +1068,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteCharArray(char[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -892,6 +1104,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteIntArray(int[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -904,6 +1120,10 @@ namespace MLAPI.Serialization
         /// <param name="write">The new array</param>
         /// <param name="compare">The previous array to use for diff</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteIntArrayDiff(int[] write, int[] compare, long count = -1)
         {
             CheckLengths(write, compare);
@@ -924,6 +1144,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUIntArray(uint[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -956,6 +1180,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteLongArray(long[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -968,6 +1196,10 @@ namespace MLAPI.Serialization
         /// <param name="write">The new array</param>
         /// <param name="compare">The previous array to use for diff</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteLongArrayDiff(long[] write, long[] compare, long count = -1)
         {
             CheckLengths(write, compare);
@@ -988,6 +1220,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteULongArray(ulong[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -1079,10 +1315,6 @@ namespace MLAPI.Serialization
             }
         }
 
-
-
-
-
         // Packed arrays
 #if ARRAY_RESOLVE_IMPLICIT
         /// <summary>
@@ -1090,10 +1322,13 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="a">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteArrayPacked(Array a, long count = -1)
         {
             Type arrayType = a.GetType();
-
 
 #if ARRAY_WRITE_PERMISSIVE
             if (arrayType == typeof(byte[])) WriteByteArray(a as byte[], count);
@@ -1137,6 +1372,7 @@ namespace MLAPI.Serialization
             else if (arrayType == typeof(double[])) WriteDoubleArrayPackedDiff(write as double[], compare as double[], count);
             else throw new InvalidDataException("Unknown array type! Please serialize manually!");
         }
+
 #endif
 
         /// <summary>
@@ -1144,6 +1380,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteShortArrayPacked(short[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -1176,6 +1416,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteUShortArrayPacked(ushort[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
@@ -1208,6 +1452,10 @@ namespace MLAPI.Serialization
         /// </summary>
         /// <param name="b">The array to write</param>
         /// <param name="count">The amount of elements to write</param>
+#if !NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
         public void WriteCharArrayPacked(char[] b, long count = -1)
         {
             ulong target = WriteArraySize(b, null, count);
